@@ -63,19 +63,19 @@ can be retrieved and canceled when you leave live mode.")
   :group 'mindstream
   :keymap
   (let ((mindstream-map (make-sparse-keymap)))
-    (define-key mindstream-map (kbd "C-c , n") #'mindstream-new)
-    (define-key mindstream-map (kbd "C-c , b") #'mindstream-enter-anonymous-session)
-    (define-key mindstream-map (kbd "C-c , t") #'mindstream-enter-session-for-template)
-    (define-key mindstream-map (kbd "C-c , m") #'mindstream-begin-session)
-    (define-key mindstream-map (kbd "C-c , q") #'mindstream-end-session)
-    (define-key mindstream-map (kbd "C-c , s") #'mindstream-save-session)
-    (define-key mindstream-map (kbd "C-c , C-s") #'mindstream-save-session)
-    (define-key mindstream-map (kbd "C-c , r") #'mindstream-load-session)
-    (define-key mindstream-map (kbd "C-c , a") #'mindstream-archive)
-    (define-key mindstream-map (kbd "C-c , o") #'mindstream-open)
-    (define-key mindstream-map (kbd "C-c , O") #'mindstream-open-all)
-    (define-key mindstream-map (kbd "C-c , C-l") #'mindstream-go-live)
-    (define-key mindstream-map (kbd "C-c , C-o") #'mindstream-go-offline)
+    (define-key mindstream-map (kbd "C-c . n") #'mindstream-new)
+    (define-key mindstream-map (kbd "C-c . b") #'mindstream-enter-anonymous-session)
+    (define-key mindstream-map (kbd "C-c . t") #'mindstream-enter-session-for-template)
+    (define-key mindstream-map (kbd "C-c . m") #'mindstream-begin-session)
+    (define-key mindstream-map (kbd "C-c . q") #'mindstream-end-session)
+    (define-key mindstream-map (kbd "C-c . s") #'mindstream-save-session)
+    (define-key mindstream-map (kbd "C-c . C-s") #'mindstream-save-session)
+    (define-key mindstream-map (kbd "C-c . r") #'mindstream-load-session)
+    (define-key mindstream-map (kbd "C-c . a") #'mindstream-archive)
+    (define-key mindstream-map (kbd "C-c . o") #'mindstream-open)
+    (define-key mindstream-map (kbd "C-c . O") #'mindstream-open-all)
+    (define-key mindstream-map (kbd "C-c . C-l") #'mindstream-go-live)
+    (define-key mindstream-map (kbd "C-c . C-o") #'mindstream-go-offline)
 
     mindstream-map)
   (if mindstream-mode
@@ -309,6 +309,36 @@ the file to be opened."
     (find-file (expand-file-name file dir))
     (mindstream-begin-session)))
 
+;; FUNCION ORIGINAL
+;; (defun mindstream--completing-read-session ()
+;;   "Return session-file via completion for template."
+;;   ;; It's probably also good to delete sub-directories of
+;;   ;; anon. There will be too many.
+;;   (let* ((dirs-alist (mapcar
+;;                       (lambda (d)
+;;                         (cons d (mindstream--session-file-name-expand d)))
+;;                       (seq-uniq
+;;                        ;; deduplicate candidates
+;;                        (seq-filter
+;;                         ;; exclude anonymous sessions
+;;                         (lambda (f)
+;;                           (not (string-match-p (abbreviate-file-name
+;;                                                 (expand-file-name mindstream-path))
+;;                                                f)))
+;;                         (append mindstream-session-history
+;;                                 (apply #'append
+;;                                        (seq-map #'mindstream--directory-dirs
+;;                                                 (mindstream--directory-dirs mindstream-save-session-path)))))
+;;                        ;; trim any trailing slashes for comparison
+;;                        (lambda (a b)
+;;                          (equal (string-trim-right a "/")
+;;                                 (string-trim-right b "/"))))))
+;;          (dir-key (completing-read "Which session? " dirs-alist nil t nil
+;;                                    'mindstream-session-history))
+;;          (dir (cdr (assoc-string dir-key dirs-alist))))
+;;     ;; Return directory name
+;;     (file-name-as-directory dir)))
+
 (defun mindstream--completing-read-session ()
   "Return session-file via completion for template."
   ;; It's probably also good to delete sub-directories of
@@ -324,10 +354,13 @@ the file to be opened."
                           (not (string-match-p (abbreviate-file-name
                                                 (expand-file-name mindstream-path))
                                                f)))
-                        (append mindstream-session-history
+                        ;; ELIMINADO: mindstream-session-history
+                        (append (apply #'append
+                                       (seq-map #'mindstream--directory-dirs
+                                                (mindstream--directory-dirs mindstream-save-session-path)))
                                 (apply #'append
                                        (seq-map #'mindstream--directory-dirs
-                                                (mindstream--directory-dirs mindstream-save-session-path)))))
+                                                (mindstream--directory-dirs mindstream-archive-path)))))
                        ;; trim any trailing slashes for comparison
                        (lambda (a b)
                          (equal (string-trim-right a "/")
@@ -337,6 +370,7 @@ the file to be opened."
          (dir (cdr (assoc-string dir-key dirs-alist))))
     ;; Return directory name
     (file-name-as-directory dir)))
+
 
 (defun mindstream--session-file-name-expand (file)
   "Return fully expanded FILE name for `mindstream-session-history'."
